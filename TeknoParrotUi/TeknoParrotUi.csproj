@@ -207,6 +207,9 @@
     <Compile Include="Views\TeknoParrotOnline.xaml.cs">
       <DependentUpon>TeknoParrotOnline.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\tenFootLibrary.xaml.cs">
+      <DependentUpon>tenFootLibrary.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\TPOnlineCreate.xaml.cs">
       <DependentUpon>TPOnlineCreate.xaml</DependentUpon>
     </Compile>
@@ -274,6 +277,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\TeknoParrotOnline.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\tenFootLibrary.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

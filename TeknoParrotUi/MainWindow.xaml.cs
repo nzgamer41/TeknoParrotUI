@@ -41,7 +41,8 @@ namespace TeknoParrotUi
             Directory.CreateDirectory("Icons");
             _library = new Library(contentControl);
             _addGame = new AddGame(contentControl, _library);
-            contentControl.Content = _library;
+            //contentControl.Content = _library;
+            contentControl.Content = new tenFootLibrary();
             versionText.Text = GameVersion.CurrentVersion;
             Title = "TeknoParrot UI " + GameVersion.CurrentVersion;
         }
