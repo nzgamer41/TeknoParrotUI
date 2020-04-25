@@ -1,9 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
+using MahApps.Metro.Controls;
 using SharpDX.XInput;
 using TeknoParrotUi.Common;
 
@@ -23,6 +28,8 @@ namespace TeknoParrotUi.Helpers
             SpawnXInputListener(UserIndex.Two);
             SpawnXInputListener(UserIndex.Three);
             SpawnXInputListener(UserIndex.Four);
+            //gay super dumb method probably doesnt work
+            new Thread(() => { clearOldButton(); }).Start();
         }
 
         public void StopListening()
@@ -58,6 +65,98 @@ namespace TeknoParrotUi.Helpers
                 }
             ).Start();
         }
+
+        /// <summary>
+        /// Finds all child elements of a type in a specified window
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="depObj"></param>
+        /// <returns></returns>
+        public static IEnumerable<T> FindVisualChildren<T>(DependencyObject depObj) where T : DependencyObject
+        {
+            if (depObj != null)
+            {
+                for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+                {
+                    DependencyObject child = VisualTreeHelper.GetChild(depObj, i);
+                    if (child != null && child is T)
+                    {
+                        yield return (T)child;
+                    }
+
+                    foreach (T childOfChild in FindVisualChildren<T>(child))
+                    {
+                        yield return childOfChild;
+                    }
+                }
+            }
+        }
+
+        private void clearOldButton()
+        {
+            //this is dumb gay useless code but idk any other way to fix this gay shit
+            while (true)
+            {
+                Thread.Sleep(5000);
+                oldButton = "";
+            }
+        }
+        private string oldButton = "notananalog";
+        /// <summary>
+        /// Moves the focus from the currently selected textbox to the next one.
+        /// </summary>
+        private void incrementTextBoxFocus(bool isButton, string analogName = "notananalog")
+        {
+            if (isButton)
+            {
+                elementIncrement();
+            }
+            else
+            {
+               //move textbox
+               //check if it's still the same button
+               //if so wait a second or two then do nothing
+               if (analogName == oldButton)
+               {
+                   return;
+               }
+               else
+               {
+                   elementIncrement();
+                   oldButton = analogName;
+               }
+
+            }
+        }
+
+        /// <summary>
+        /// private method that increments the textboxes
+        /// </summary>
+        private void elementIncrement()
+        {
+            var textBoxes = FindVisualChildren<TextBox>(Application.Current.Windows[0]);
+            int element = 0;
+            //set initial text box
+            TextBox newFocus = textBoxes.ElementAt(0);
+            foreach (TextBox tb in textBoxes)
+            {
+                if (tb.IsFocused)
+                {
+                    element++;
+                    newFocus = textBoxes.ElementAt(element);
+                }
+                else
+                {
+                    element++;
+                }
+
+
+            }
+
+            FocusManager.SetFocusedElement(Application.Current.Windows[0], newFocus);
+            return;
+        }
+
 
         /// <summary>
         /// Sets text box text and tag.
@@ -138,6 +237,7 @@ namespace TeknoParrotUi.Helpers
                         txt.Text = $"Input Device {index} " + "LeftTrigger";
                         t.XInputButton = button;
                         t.BindNameXi = txt.Text;
+                        incrementTextBoxFocus(false, txt.Text);
                         return;
                     }
 
@@ -148,6 +248,7 @@ namespace TeknoParrotUi.Helpers
                         txt.Text = $"Input Device {index} " + "RightTrigger";
                         t.BindNameXi = txt.Text;
                         t.XInputButton = button;
+                        incrementTextBoxFocus(false, txt.Text);
                     }
                 }));
         }
@@ -164,6 +265,7 @@ namespace TeknoParrotUi.Helpers
             txt.Text = $"Input Device {index} " + buttonFlag;
             t.BindNameXi = txt.Text;
             t.XInputButton = button;
+            incrementTextBoxFocus(true);
         }
 
         /// <summary>
@@ -238,6 +340,7 @@ namespace TeknoParrotUi.Helpers
                 t.BindNameXi = txt.Text;
                 t.XInputButton = button;
             }
+            incrementTextBoxFocus(false, txt.Text);
         }
     }
 }
