@@ -27,6 +27,7 @@ namespace TeknoParrotUi
         private GameProfile _profile;
         private bool _emuOnly, _test, _tpOnline, _startMin;
         private bool _profileLaunch;
+        SplashScreen splashScreen;
 
         public static bool Is64Bit()
         {
@@ -208,7 +209,8 @@ namespace TeknoParrotUi
                     }
                 }
             }
-
+            splashScreen = new SplashScreen();
+            splashScreen.Show();
             if (File.Exists("DumbJVSManager.exe"))
             {
                 MessageBoxHelper.ErrorOK(TeknoParrotUi.Properties.Resources.ErrorOldTeknoParrotDirectory);
@@ -323,8 +325,9 @@ namespace TeknoParrotUi
 
         private void StartApp()
         {
-            MainWindow wnd = new MainWindow();
+            MainWindow wnd = new MainWindow(splashScreen);
             wnd.Show();
+            
         }
     }
 }
