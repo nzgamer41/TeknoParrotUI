@@ -14,6 +14,7 @@ using CefSharp;
 using CefSharp.Wpf;
 using TeknoParrotUi.Common;
 using TeknoParrotUi.Helpers;
+using System.Threading;
 
 namespace TeknoParrotUi
 {
@@ -27,7 +28,7 @@ namespace TeknoParrotUi
         private GameProfile _profile;
         private bool _emuOnly, _test, _tpOnline, _startMin;
         private bool _profileLaunch;
-        SplashScreen splashScreen;
+        Thread splashScreenThread;
 
         public static bool Is64Bit()
         {
@@ -209,8 +210,15 @@ namespace TeknoParrotUi
                     }
                 }
             }
-            splashScreen = new SplashScreen();
-            splashScreen.Show();
+            splashScreenThread = new Thread(delegate ()
+            {
+                SplashScreen ss = new SplashScreen();
+                ss.Show();
+                System.Windows.Threading.Dispatcher.Run();
+            });
+            splashScreenThread.SetApartmentState(ApartmentState.STA);
+            splashScreenThread.Start();
+            
             if (File.Exists("DumbJVSManager.exe"))
             {
                 MessageBoxHelper.ErrorOK(TeknoParrotUi.Properties.Resources.ErrorOldTeknoParrotDirectory);
@@ -325,7 +333,7 @@ namespace TeknoParrotUi
 
         private void StartApp()
         {
-            MainWindow wnd = new MainWindow(splashScreen);
+            MainWindow wnd = new MainWindow(splashScreenThread);
             wnd.Show();
             
         }

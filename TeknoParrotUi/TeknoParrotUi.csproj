@@ -260,8 +260,8 @@
     <Compile Include="SplashScreen.xaml.cs">
       <DependentUpon>SplashScreen.xaml</DependentUpon>
     </Compile>
-    <Compile Include="SplashScreen.xaml.cs">
-      <DependentUpon>SplashScreen.xaml</DependentUpon>
+    <Compile Include="UserControls\NetworkAdapterDropdown.xaml.cs">
+      <DependentUpon>NetworkAdapterDropdown.xaml</DependentUpon>
     </Compile>
     <Compile Include="ViewModels\TextInputDialog.xaml.cs">
       <DependentUpon>TextInputDialog.xaml</DependentUpon>

@@ -26,7 +26,7 @@ namespace TeknoParrotUi.Helpers
 
         public static bool InfoYesNo(string message)
         {
-            return MessageBox.Show(message, Properties.Resources.Information, MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.Yes;
+            return MessageBox.Show(message, Properties.Resources.Information, MessageBoxButton.YesNo, MessageBoxImage.Information, MessageBoxResult.Yes, MessageBoxOptions.DefaultDesktopOnly) == MessageBoxResult.Yes;
         }
 
         public static void WarningOK(string message)

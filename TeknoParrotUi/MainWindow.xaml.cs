@@ -13,6 +13,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -44,7 +45,7 @@ namespace TeknoParrotUi
         private bool _cefInit = false;
         public List<GitHubUpdates> updates = new List<GitHubUpdates>();
 
-        public MainWindow(SplashScreen ss)
+        public MainWindow(Thread ss)
         {
             InitializeComponent();
             var userWindowSize = new WindowSizeHelper();
@@ -65,7 +66,13 @@ namespace TeknoParrotUi
             // 2 seconds
             SaveCompleteSnackbar.MessageQueue = new SnackbarMessageQueue(TimeSpan.FromMilliseconds(2000));
             UpdateTitleBar();
-            ss.Close();
+            // This kills the splash screen window thread once MainWindow is ready
+            if (ss != null)
+            {
+                ss.Abort();
+            }
+            this.Topmost = true;
+            this.Activate();
         }
 
         public void ShowMessage(string message)
