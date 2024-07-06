@@ -114,6 +114,9 @@ namespace TeknoParrotUi.Common
         NxL2,
         JojoLastSurvivor,
         GundamKizuna2,
-        Xiyangyang
+        Xiyangyang,
+        DenshaDeGo,
+        ALLSIDTA,
+        TransformersShadowsRising
     }
 }

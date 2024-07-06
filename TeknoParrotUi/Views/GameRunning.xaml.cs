@@ -354,11 +354,6 @@ namespace TeknoParrotUi.Views
             {
                 File.WriteAllText(Path.Combine(Path.GetDirectoryName(_gameLocation2) ?? throw new InvalidOperationException(), "teknoparrot.ini"), lameFile);
             }
-
-            if (_gameProfile.EmulationProfile == EmulationProfile.EXVS2 || _gameProfile.EmulationProfile == EmulationProfile.EXVS2XB)
-            {
-                File.WriteAllText(Path.Combine(Path.Combine(Path.GetDirectoryName(_gameLocation), "AMCUS") ?? throw new InvalidOperationException(), "teknoparrot.ini"), lameFile);
-            }
         }
 
         private void GameRunning_OnLoaded(object sender, RoutedEventArgs e)
@@ -485,6 +480,10 @@ namespace TeknoParrotUi.Views
                 case EmulationProfile.Harley:
                     if (_pipe == null)
                         _pipe = new amJvsPipe();
+                    break;
+                case EmulationProfile.ALLSIDTA:
+                    if (_pipe == null)
+                        _pipe = new SWDCALLSUsbIoPipe();
                     break;
 #if DEBUG
                 case EmulationProfile.Outrun2SPX:
@@ -668,7 +667,14 @@ namespace TeknoParrotUi.Views
                     break;
                 case EmulationProfile.BorderBreak:
                 case EmulationProfile.ALLSSCHRONO:
+                case EmulationProfile.ALLSIDTA:
                     _controlSender = new AimeButton();
+                    break;
+                case EmulationProfile.DenshaDeGo:
+                    _controlSender = new NxL2Pipe();
+                    break;
+                case EmulationProfile.TransformersShadowsRising:
+                    _controlSender = new TransformersShadowsRisingPipe();
                     break;
             }
 
@@ -1106,6 +1112,10 @@ namespace TeknoParrotUi.Views
                         Path.GetDirectoryName(_gameLocation) ?? throw new InvalidOperationException();
                     info.UseShellExecute = false;
                     info.EnvironmentVariables.Add("tp_windowed", windowed ? "1" : "0");
+                    if (Lazydata.ParrotData.Elfldr2NetworkAdapterName != "")
+                    {
+                        info.EnvironmentVariables.Add("TP_ETH", Lazydata.ParrotData.Elfldr2NetworkAdapterName);
+                    }
 
                     if (_gameProfile.EmulationProfile == EmulationProfile.Vt3Lindbergh)
                     {
@@ -1282,8 +1292,6 @@ namespace TeknoParrotUi.Views
 
                 if (InputCode.ButtonMode == EmulationProfile.NamcoMkdx)
                 {
-                    var amcus = Path.Combine(Path.GetDirectoryName(_gameLocation), "AMCUS");
-
                     // make sure the game isn't already running still
                     try
                     {
@@ -1431,10 +1439,19 @@ namespace TeknoParrotUi.Views
                 if (InputCode.ButtonMode == EmulationProfile.ALLSSWDC)
                 {
                     // boot tdrserver.exe if its the main cab
-                    string tdrserverPath = Path.Combine(Path.GetDirectoryName(_gameLocation), @"..\..\..\..\..\Tools", "tdrserver.exe");
-                    if (File.Exists(tdrserverPath))
+                    var isSwdcMainCab = _gameProfile.ConfigValues.FirstOrDefault(x => x.FieldName == "Main Cabinet");
+                    var isOfflineMode = _gameProfile.ConfigValues.FirstOrDefault(x => x.FieldName == "Offline Mode");
+
+                    if (isOfflineMode != null && isOfflineMode.FieldValue != "0")
                     {
-                        RunAndWait(loaderExe, $"{loaderDll} \"{tdrserverPath}\"");
+                        if (isSwdcMainCab != null && isSwdcMainCab.FieldValue != "0")
+                        {
+                            string tdrserverPath = Path.Combine(Path.GetDirectoryName(_gameLocation), @"..\..\..\..\..\Tools", "tdrserver.exe");
+                            if (File.Exists(tdrserverPath))
+                            {
+                                RunAndWait(loaderExe, $"{loaderDll} \"{tdrserverPath}\"");
+                            }
+                        }
                     }
                 }
 
@@ -1454,11 +1471,12 @@ namespace TeknoParrotUi.Views
                 _gameProfile.EmulationProfile == EmulationProfile.ALLSSCHRONO ||
                 _gameProfile.EmulationProfile == EmulationProfile.NxL2 ||
                 _gameProfile.EmulationProfile == EmulationProfile.RawThrillsFNF ||
-                _gameProfile.EmulationProfile == EmulationProfile.ALLSHOTDSD || 
+                _gameProfile.EmulationProfile == EmulationProfile.ALLSHOTDSD ||
                 _gameProfile.EmulationProfile == EmulationProfile.ALLSFGO ||
                 _gameProfile.EmulationProfile == EmulationProfile.TimeCrisis5 ||
                 _gameProfile.EmulationProfile == EmulationProfile.JojoLastSurvivor ||
-                _gameProfile.EmulationProfile == EmulationProfile.IDZ
+                _gameProfile.EmulationProfile == EmulationProfile.DenshaDeGo ||
+                _gameProfile.EmulationProfile == EmulationProfile.ALLSIDTA
                 )
                 {
                     try
@@ -1618,13 +1636,22 @@ namespace TeknoParrotUi.Views
                         MessageBox.Show("GAME PATH CHECK FAILED!...\nThis game need all his files to be in a \"pm\" directory.\n\nPlease move every files inside your game/dump folder to the newly created \"pm\" directory inside it.\nThen please re-set the path to the game elf in TeknoparrotUI settings before restarting the game.\n\nNow closing...");
                         break;
                     case 0xB0B0011:
-                        MessageBox.Show("Missing Files detected. Please extract and put the programs_dec folder next to the game elf otherwise the game will not function properly. Now closing...");
+                        MessageBox.Show("Missing Files detected. Please extract and place the \"programs_dec\" folder next to the game elf otherwise the game will not function properly. Now closing...");
+                        break;
+                    case 0xB0B0012:
+                        MessageBox.Show("Missing Files detected. Please extract and place the \"hasp\" folder next to the game elf otherwise the game will not function properly. Now closing...");
+                        break;
+                    case 0xB0B0013:
+                        MessageBox.Show("Missing Files detected. Please extract and place the \"TPVirtualCards.dll\" file next to the game exe to enable Virtual Cards interface.\nAvailable from #Fixes channel on TP-Discord.\n Now closing...");
                         break;
                     case 0xB0B0020:
                         MessageBox.Show("This game need these file in game root:\nSDL2.dll\n\nPlease come to #Fixes channel on TP-Discord.\n......\n\nNow closing...");
                         break;
                     case 0xB0B0021:
                         MessageBox.Show("This game need these file in game root:\nzlib1.dll (v1.2.3)\nlibeay32.dll (v1.0.0.e)\nssleay32.dll (v1.0.0.e)\n\nPlease come to #Fixes channel on TP-Discord.\n......\n\nNow closing...");
+                        break;
+                    case 0xB0B0022:
+                        MessageBox.Show("This game need these file in game root:\nalleg40.dll (Allegro API v4.0.X)\n\nPlease come to #Fixes channel on TP-Discord.\n......\n\nNow closing...");
                         break;
                     case 0xAAA0000:
                         MessageBox.Show("Could not connect to TPO2 lobby server. Quitting game...");
@@ -1785,43 +1812,21 @@ namespace TeknoParrotUi.Views
             }
         }
 
-        private static void Register_Dlls(string filePath)
-        {
-            try
-            {
-                //'/s' : Specifies regsvr32 to run silently and to not display any message boxes.
-                string argFileinfo = "/s" + " " + "\"" + filePath + "\"";
-                Process reg = new Process();
-                //This file registers .dll files as command components in the registry.
-                reg.StartInfo.FileName = "regsvr32.exe";
-                reg.StartInfo.Arguments = argFileinfo;
-                reg.StartInfo.UseShellExecute = false;
-                reg.StartInfo.CreateNoWindow = true;
-                reg.StartInfo.RedirectStandardOutput = true;
-                reg.Start();
-                reg.WaitForExit();
-                reg.Close();
-            }
-            catch (Exception ex)
-            {
-                MessageBoxHelper.ErrorOK(ex.ToString());
-            }
-        }
-
         private void RunAndWait(string loaderExe, string daemonPath)
         {
             ProcessStartInfo info = new ProcessStartInfo(loaderExe, daemonPath);
-                if (_gameProfile.EmulationProfile == EmulationProfile.ALLSSWDC ||
-                _gameProfile.EmulationProfile == EmulationProfile.IDZ ||
-                _gameProfile.EmulationProfile == EmulationProfile.ALLSSCHRONO ||
-                _gameProfile.EmulationProfile == EmulationProfile.NxL2 ||
-                _gameProfile.EmulationProfile == EmulationProfile.RawThrillsFNF ||
-                _gameProfile.EmulationProfile == EmulationProfile.ALLSHOTDSD || 
-                _gameProfile.EmulationProfile == EmulationProfile.ALLSFGO ||
-                _gameProfile.EmulationProfile == EmulationProfile.TimeCrisis5 ||
-                _gameProfile.EmulationProfile == EmulationProfile.JojoLastSurvivor ||
-                _gameProfile.EmulationProfile == EmulationProfile.IDZ
-                ) { 
+            if (_gameProfile.EmulationProfile == EmulationProfile.ALLSSWDC ||
+            _gameProfile.EmulationProfile == EmulationProfile.IDZ ||
+            _gameProfile.EmulationProfile == EmulationProfile.ALLSSCHRONO ||
+            _gameProfile.EmulationProfile == EmulationProfile.NxL2 ||
+            _gameProfile.EmulationProfile == EmulationProfile.RawThrillsFNF ||
+            _gameProfile.EmulationProfile == EmulationProfile.ALLSHOTDSD ||
+            _gameProfile.EmulationProfile == EmulationProfile.ALLSFGO ||
+            _gameProfile.EmulationProfile == EmulationProfile.TimeCrisis5 ||
+            _gameProfile.EmulationProfile == EmulationProfile.JojoLastSurvivor ||
+            _gameProfile.EmulationProfile == EmulationProfile.ALLSIDTA
+            )
+            {
                 try
                 {
                     info.UseShellExecute = false;
